@@ -122,35 +122,37 @@ func securityHeaders(next http.Handler) http.Handler {
 // CORS
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// CORS Totalmente Liberado para Múltiplos Serviços
+// ---------------------------------------------------------------------------
+
 func cors(origins []string) func(http.Handler) http.Handler {
-	allowed := make(map[string]bool, len(origins))
-
-	for _, origin := range origins {
-		allowed[origin] = true
-	}
-
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 			origin := r.Header.Get("Origin")
 
-			if origin != "" && allowed[origin] {
-				h := w.Header()
-
-				h.Set("Access-Control-Allow-Origin", origin)
-				h.Set("Access-Control-Allow-Credentials", "true")
-				h.Set(
-					"Access-Control-Allow-Methods",
-					"GET, POST, PUT, DELETE, OPTIONS",
-				)
-				h.Set(
-					"Access-Control-Allow-Headers",
-					"Content-Type",
-				)
-				h.Set("Access-Control-Max-Age", "600")
-				h.Add("Vary", "Origin")
+			// Se a requisição vier com uma origem, reflete ela dinamicamente.
+			// Se não vier (ex: requisições de servidores, curl, Postman), usa o curinga "*".
+			if origin != "" {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+			} else {
+				w.Header().Set("Access-Control-Allow-Origin", "*")
 			}
 
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+			w.Header().Set(
+				"Access-Control-Allow-Methods",
+				"GET, POST, PUT, DELETE, OPTIONS",
+			)
+			w.Header().Set(
+				"Access-Control-Allow-Headers",
+				"Content-Type, Authorization, X-Service-Key",
+			)
+			w.Header().Set("Access-Control-Max-Age", "600")
+			w.Header().Add("Vary", "Origin")
+
+			// Responde imediatamente às requisições pré-voo (OPTIONS) dos navegadores
 			if r.Method == http.MethodOptions {
 				w.WriteHeader(http.StatusNoContent)
 				return
@@ -160,7 +162,6 @@ func cors(origins []string) func(http.Handler) http.Handler {
 		})
 	}
 }
-
 // ---------------------------------------------------------------------------
 // Rate limit por IP
 // ---------------------------------------------------------------------------
