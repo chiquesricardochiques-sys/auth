@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	serverPort     = "8080"
+	serverPort     = "8081"
 	codeTTL        = 15 * time.Minute
 	janitorInterval = 10 * time.Minute
 )
