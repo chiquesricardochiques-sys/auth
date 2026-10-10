@@ -19,7 +19,8 @@ func clientIP(r *http.Request, trustProxy bool) string {
 		if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
 			parts := strings.Split(xff, ",")
 
-			if ip := strings.TrimSpace(parts[len(parts)-1]); ip != "" {
+			// O IP real do cliente vem na primeira posição (parts[0])
+			if ip := strings.TrimSpace(parts[0]); ip != "" {
 				return ip
 			}
 		}
@@ -162,6 +163,7 @@ func cors(origins []string) func(http.Handler) http.Handler {
 		})
 	}
 }
+
 // ---------------------------------------------------------------------------
 // Rate limit por IP
 // ---------------------------------------------------------------------------
